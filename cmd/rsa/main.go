@@ -29,7 +29,13 @@ func keyGen(keySize int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 func sign(private *rsa.PrivateKey, msg []byte) ([]byte, error) {
 	hashed := sha256.Sum256(msg)
 
-	signature, err := rsa.SignPSS(rand.Reader, private, crypto.SHA256, hashed[:], nil)
+	signature, err := rsa.SignPSS(
+		rand.Reader,
+		private,
+		crypto.SHA256,
+		hashed[:],
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +58,7 @@ func verify(public *rsa.PublicKey, msg, signature []byte) error {
 func privateToPem(private *rsa.PrivateKey) []byte {
 	return pem.EncodeToMemory(
 		&pem.Block{
-			Type:  "RSA private",
+			Type:  "RSA PRIVATE KEY",
 			Bytes: x509.MarshalPKCS1PrivateKey(private),
 		},
 	)
@@ -61,7 +67,7 @@ func privateToPem(private *rsa.PrivateKey) []byte {
 func publicToPem(public *rsa.PublicKey) []byte {
 	return pem.EncodeToMemory(
 		&pem.Block{
-			Type:  "RSA public",
+			Type:  "RSA PUBLIC KEY",
 			Bytes: x509.MarshalPKCS1PublicKey(public),
 		},
 	)
@@ -85,16 +91,8 @@ func main() {
 
 	fmt.Println("signature:", hex.EncodeToString(signature))
 
-	// valid signature
 	if err := verify(public, []byte(message), signature); err == nil {
 		fmt.Println("verified")
-	} else {
-		log.Fatal(err)
-	}
-
-	// invalid signature
-	if err := verify(public, []byte(message), []byte(message)); err != nil {
-		fmt.Println("invalid signature")
 	} else {
 		log.Fatal(err)
 	}
